@@ -1,5 +1,13 @@
-pandas
-numpy
-matplotlib
-scikit-learn
-jupyter
+# Core data processing
+pandas==2.0.3
+numpy==1.24.3
+
+# Visualization
+matplotlib==3.7.1
+seaborn==0.12.2
+
+# Machine Learning
+scikit-learn==1.3.0
+
+# Model saving/loading
+joblib==1.3.1
