@@ -1,4 +1,4 @@
-# Customer Analytics: Segmentation, Revenue Forecasting & Churn Prediction
+# Customer Lifetime Value: Segmentation, Revenue Forecasting & Churn Prediction
 
 An end-to-end customer analytics pipeline built on transactional retail data (~4,300 customers, ~408K transactions). The project moves from raw data cleaning through unsupervised segmentation to two supervised models that predict future customer value and churn risk.
 
