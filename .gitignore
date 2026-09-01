@@ -1,39 +1,34 @@
-# Python
+# Byte-compiled / cache
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
-env/
-venv/
-ENV/
-.venv
 
-# Jupyter Notebook
+# Jupyter Notebook checkpoints
 .ipynb_checkpoints/
-*.ipynb_checkpoints
-*.ipynb~
 
-# Data
-data/
-*.csv
-*.xlsx
-*.db
+# Virtual environment
+venv/
+env/
+.venv/
+ENV/
 
-# Models
-models/
-*.pkl
-*.joblib
+# Data & models (thường nặng, không nên commit)
+data/*.csv
+data/*.xlsx
+models/*.pkl
+models/*.joblib
+
+# Nhưng giữ lại thư mục để track cấu trúc
+!data/.gitkeep
+!models/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
 
 # IDE
 .vscode/
 .idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
 
 # Logs
 *.log
