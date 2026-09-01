@@ -12,13 +12,12 @@ env/
 .venv/
 ENV/
 
-# Data & models (thường nặng, không nên commit)
+# Data & models 
 data/*.csv
 data/*.xlsx
 models/*.pkl
 models/*.joblib
 
-# Nhưng giữ lại thư mục để track cấu trúc
 !data/.gitkeep
 !models/.gitkeep
 
