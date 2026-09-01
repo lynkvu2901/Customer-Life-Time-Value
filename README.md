@@ -1,126 +1,95 @@
-# Customer Lifetime Value: Segmentation, Revenue Forecasting & Churn Prediction
+# Customer Analytics Project: RFM Segmentation, Revenue Prediction & Churn Classification
 
-An end-to-end customer analytics pipeline built on transactional retail data (~4,300 customers, ~408K transactions). The project moves from raw data cleaning through unsupervised segmentation to two supervised models that predict future customer value and churn risk.
+Dự án phân tích dữ liệu khách hàng theo pipeline 4 giai đoạn: làm sạch dữ liệu, phân cụm khách hàng (RFM + KMeans), dự đoán doanh thu và dự đoán khách hàng rời bỏ (churn).
 
----
+## Mục lục
+- [Tổng quan](#tổng-quan)
+- [Cấu trúc dự án](#cấu-trúc-dự-án)
+- [Chi tiết từng phase](#chi-tiết-từng-phase)
+- [Cách chạy](#cách-chạy)
+- [Kết quả chính](#kết-quả-chính)
+- [Hạn chế & hướng phát triển](#hạn-chế--hướng-phát-triển)
 
-## Overview
+## Tổng quan
 
-Online retailers rarely treat every customer the same — but knowing who to prioritize requires more than intuition. This project answers three practical questions using only a customer's first 6 months of activity:
+Pipeline gồm 4 notebook chạy tuần tự, mỗi notebook là một phase độc lập:
 
-*   **Who are our customers, structurally?** → RFM-based clustering
-*   **How much revenue will each customer generate in the next 6 months?** → Regression
-*   **Will each customer come back at all?** → Classification
+| Phase | Notebook | Mục tiêu | Output |
+|---|---|---|---|
+| 0 | `Phase_0_Data_Cleaning.ipynb` | Làm sạch dữ liệu giao dịch, lọc đơn hàng thành công | `data/df_success.csv` |
+| 1 | `Phase_1_Clustering.ipynb` | Tính RFM, phân cụm khách hàng bằng KMeans | `data/customer_segmented.csv`, `models/kmeans_model.pkl` |
+| 2 | `Phase_2_Money_Regressor.ipynb` | Dự đoán doanh thu 6 tháng cuối từ dữ liệu 6 tháng đầu | `models/regressor_model.pkl` |
+| 3 | `Phase_3_Churn_Classification.ipynb` | Dự đoán khách hàng có nguy cơ rời bỏ (churn) | `models/churn_model.pkl` |
 
-The three questions are deliberately split into separate models rather than one black box, so each can be evaluated (and acted on) independently — a segment label for marketing, a revenue number for forecasting, a churn probability for retention campaigns.
+## Cấu trúc dự án
+project/
+├── data/
+│ ├── customer_lifetime_value.csv # dữ liệu gốc
+│ ├── df_success.csv # sau khi làm sạch (Phase 0)
+│ ├── customer.csv # bảng khách hàng
+│ └── customer_segmented.csv # sau khi phân cụm (Phase 1)
+├── models/
+│ ├── kmeans_model.pkl
+│ ├── scaler.pkl
+│ ├── regressor_model.pkl
+│ └── churn_model.pkl
+├── notebooks/
+│ ├── Phase_0_Data_Cleaning.ipynb
+│ ├── Phase_1_Clustering.ipynb
+│ ├── Phase_2_Money_Regressor.ipynb
+│ └── Phase_3_Churn_Classification.ipynb
+└── README.md
 
----
-
-## Pipeline
-
-*   **Phase 0** → Data Cleaning
-*   **Phase 1** → RFM Clustering (customer segmentation)
-*   **Phase 2** → Revenue Regression (predict next-6-month spend)
-*   **Phase 3** → Churn Classification (predict next-6-month inactivity)
-
-Each phase is a standalone notebook that reads the previous phase's output and writes its own artifact (cleaned data, trained model, or feature table) to disk.
-
-| Notebook | Input | Output |
-| :--- | :--- | :--- |
-| `Phase_0_Data_Cleaning.ipynb` | raw transaction data | `df_success.csv` (validated, successful orders only) |
-| `Phase_1_Clustering.ipynb` | `df_success.csv` | `customer_segmented.csv`, `clustering_model.pkl` |
-| `Phase_2_Money_Regressor.ipynb` | `df_success.csv`, `customer.csv` | `regressor_model.pkl` |
-| `Phase_3_Churn_Classification.ipynb` | `df_success.csv`, `customer.csv` | `churn_model.pkl`, `feature_importance_churn.csv` |
-
----
-
-## Methodology
+## Chi tiết từng phase
 
 ### Phase 0 — Data Cleaning
-*   Parsed invoice dates, normalized types, dropped rows with missing Customer ID.
-*   Filtered out cancelled/returned orders (negative-quantity and credit-note invoices) to isolate successfully fulfilled orders.
-*   Derived `Amount = Quantity × Price` as the base monetary field used downstream.
+Đọc dữ liệu giao dịch gốc (`customer_lifetime_value.csv`), lọc ra các đơn hàng được đặt thành công, xuất ra `df_success.csv` làm input cho các phase sau.
 
-### Phase 1 — RFM Clustering
-*   Computed Recency, Frequency, Monetary (RFM) per customer.
-*   Applied `log1p` transform to reduce skew/outlier influence before scaling (`StandardScaler`).
-*   Selected K using four independent metrics — WCSS (elbow), Silhouette, Davies-Bouldin, and Calinski-Harabasz — rather than relying on a single heuristic.
-*   Fit K-Means with K = 3, then translated statistical clusters into business-readable segments:
-
-| Segment | Share | Recency (median) | Monetary (median) | Frequency (median) |
-| :--- | :--- | :--- | :--- | :--- |
-| **The Elite** | 19.1% | 10 days | $3,446 | 9 |
-| **The Loyalists** | 41.0% | 38 days | $977 | 3 |
-| **Need Attention** | 39.9% | 157 days | $262 | 1 |
-
-*   Visualized cluster separation with PCA (2D projection).
+### Phase 1 — Customer Segmentation (RFM + KMeans)
+- Tính chỉ số **RFM** (Recency – Frequency – Monetary) cho từng khách hàng.
+- Tách riêng nhóm **Siêu VIP** trước khi đưa vào phân cụm (tránh outlier làm lệch cluster).
+- Chuẩn hóa dữ liệu, tìm số cụm tối ưu bằng **Elbow method**.
+- Phân cụm bằng **KMeans**, phân tích đặc điểm từng cụm và gán nhãn phân khúc (segment).
+- Trực quan hóa cụm bằng **PCA**.
+- Lưu kết quả phân khúc và model (KMeans, scaler).
 
 ### Phase 2 — Revenue Regression
-*   **Framing:** using only each customer's first 6 months of transactions, predict total spend in the following 6 months (including customers who spend $0, i.e. churn).
-*   **Engineered features:** recency, monetary, frequency, average order value, days between purchases, product diversity, and country-level spending benchmarks.
-*   Applied `log1p` to the (heavily skewed) revenue target, trained Linear Regression / Random Forest / Gradient Boosting, then inverse-transformed predictions for evaluation.
-*   Split train/test stratified on whether the customer churned (target = 0), so both sets preserve the same proportion of zero-revenue customers.
-
-> **Best model: Random Forest**
-
-| Metric | Score |
-| :--- | :--- |
-| **R²** | 0.77 |
-| **MAE** | $870.68 |
-| **RMSE** | $2,298.64 |
+- Dùng dữ liệu giao dịch **6 tháng đầu** để tạo feature, dự đoán doanh thu **6 tháng cuối** (chia theo mốc thời gian, không chia ngẫu nhiên — tránh rò rỉ dữ liệu tương lai).
+- Chuẩn hóa feature, so sánh nhiều model: **Linear Regression, Random Forest, Gradient Boosting**.
+- Chọn model tốt nhất, phân tích feature importance, đánh giá trên test set.
+- Lưu model kèm scaler, tên feature và log1p transformer cho target.
 
 ### Phase 3 — Churn Classification
-*   **Target:** did the customer make zero purchases in the second 6-month window? (Churn rate in this dataset: 29.4%.)
-*   Built a richer feature set than Phase 2 (13+ engineered features: purchase cadence statistics, spend variability, product diversity, etc.), all derived strictly from the first-6-month window.
-*   Addressed class imbalance with `class_weight='balanced'` and stratified 5-fold CV.
-*   Compared Logistic Regression, Decision Tree, Random Forest, and Gradient Boosting on Accuracy / Precision / Recall / F1 / ROC-AUC.
-*   Selected the operating threshold from the ROC curve (maximizing TPR − FPR) rather than defaulting to 0.5.
+- Tạo feature RFM và nhãn churn dựa trên hành vi mua hàng.
+- EDA khám phá dữ liệu, chia train/test.
+- Huấn luyện và so sánh 2 model: **Logistic Regression** và **Random Forest**.
+- Đánh giá bằng confusion matrix, phân tích feature importance.
+- **Kết quả:** Logistic Regression cho kết quả tốt hơn. Tỷ lệ churn thực tế trong dữ liệu là **29.4%**. Model dự đoán churn dựa chủ yếu vào Recency và Frequency — hợp lý vì khách lâu không mua và mua ít lần có xu hướng rời bỏ cao hơn.
 
-> **Best model: Logistic Regression**
+## Cách chạy
 
-| Metric | Score |
-| :--- | :--- |
-| **F1-Score** | 0.556 |
-| **ROC-AUC** | 0.735 |
-| **Recall** | 0.802 |
-| **Precision** | 0.425 |
+```bash
+# Cài đặt thư viện cần thiết
+pip install pandas numpy matplotlib seaborn scikit-learn joblib
 
-*Note: Recall was prioritized over precision by design — in a retention context, the cost of missing an about-to-churn customer is generally higher than the cost of a wasted retention email.*
+# Chạy tuần tự theo thứ tự phase
+jupyter notebook notebooks/Phase_0_Data_Cleaning.ipynb
+jupyter notebook notebooks/Phase_1_Clustering.ipynb
+jupyter notebook notebooks/Phase_2_Money_Regressor.ipynb
+jupyter notebook notebooks/Phase_3_Churn_Classification.ipynb
+```
 
----
+**Lưu ý:** các notebook đọc dữ liệu qua đường dẫn tương đối `../data/...` và lưu model vào `../models/...`, nên cần giữ đúng cấu trúc thư mục ở trên.
 
-## Key Findings
-*   **Roughly 1 in 5 customers ("The Elite")** drives a disproportionate share of revenue, with recent, frequent, high-value purchases — a natural VIP/retention-priority target.
-*   **Revenue in the next 6 months is reasonably predictable** from first-6-month behavior alone (R² 0.77), meaning early-lifecycle signals carry real forward-looking value.
-*   **Nearly 30% of customers go fully inactive within a year.** The churn model catches ~80% of eventual churners at the chosen threshold, at the cost of flagging some active customers too — an intentional precision/recall trade-off for a retention use case.
+## Kết quả chính
 
----
+- Phân khúc khách hàng rõ ràng theo RFM, tách riêng được nhóm khách hàng giá trị cao (Siêu VIP/Champions).
+- Dự đoán được doanh thu 6 tháng tới của khách hàng dựa trên hành vi 6 tháng trước.
+- Xác định được nhóm khách hàng có nguy cơ churn cao (~29.4% tỷ lệ churn thực tế) để hỗ trợ chiến lược giữ chân khách hàng.
 
-## Tech Stack
-`Python` · `pandas` / `numpy` · `scikit-learn` · `matplotlib` / `seaborn` · `joblib`
+## Hạn chế & hướng phát triển
 
----
-
-## Known Limitations / Next Steps
-Being upfront about what this version doesn't yet handle well:
-*   Country-level features in Phase 2 currently use full-period statistics rather than being recomputed strictly from the first-6-month window — a leakage risk being addressed in the next iteration by deriving country benchmarks only from the training window.
-*   Linear Regression is included as a baseline but performs very poorly on this target (extremely skewed revenue distribution); tree-based models were far more robust and are used for all reported results.
-*   Segmentation logic (Phase 1) is currently tuned for K=3; extending to a variable number of segments would need a more general labeling rule.
-*   No hyperparameter tuning (GridSearch/Optuna) yet — current models use reasonable defaults, not optimized configurations.
-
----
-
-## Repository Structure
-```text
-├── Phase_0_Data_Cleaning.ipynb
-├── Phase_1_Clustering.ipynb
-├── Phase_2_Money_Regressor.ipynb
-├── Phase_3_Churn_Classification.ipynb
-├── data/
-│   ├── customer.csv
-│   ├── country.csv
-│   └── df_success.csv          (generated by Phase 0)
-└── models/
-    ├── clustering_model.pkl    (generated by Phase 1)
-    ├── regressor_model.pkl     (generated by Phase 2)
-    └── churn_model.pkl         (generated by Phase 3)
+- Mới thử nghiệm 2 model cho bài toán churn (Logistic Regression, Random Forest), threshold mặc định 0.5, chưa tối ưu hyperparameter.
+- Chưa áp dụng GridSearch/RandomizedSearch để tune model.
+- Chưa xử lý mất cân bằng dữ liệu (có thể thử SMOTE cho bài toán churn).
+- Có thể mở rộng thêm các model khác (XGBoost, LightGBM) để so sánh hiệu năng.
