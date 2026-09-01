@@ -23,21 +23,37 @@ Pipeline gồm 4 notebook chạy tuần tự, mỗi notebook là một phase đ�
 
 ## Cấu trúc dự án
 project/
+
 ├── data/
+
 │ ├── customer_lifetime_value.csv # dữ liệu gốc
+
 │ ├── df_success.csv # sau khi làm sạch (Phase 0)
+
 │ ├── customer.csv # bảng khách hàng
+
 │ └── customer_segmented.csv # sau khi phân cụm (Phase 1)
+
 ├── models/
+
 │ ├── kmeans_model.pkl
+
 │ ├── scaler.pkl
+
 │ ├── regressor_model.pkl
+
 │ └── churn_model.pkl
+
 ├── notebooks/
+
 │ ├── Phase_0_Data_Cleaning.ipynb
+
 │ ├── Phase_1_Clustering.ipynb
+
 │ ├── Phase_2_Money_Regressor.ipynb
+
 │ └── Phase_3_Churn_Classification.ipynb
+
 └── README.md
 
 ## Chi tiết từng phase
