@@ -26,35 +26,45 @@ project/
 
 ├── data/
 
-│ ├── customer_lifetime_value.csv # dữ liệu gốc
+│   ├── country.csv
 
-│ ├── df_success.csv # sau khi làm sạch (Phase 0)
+│   ├── customer.csv
 
-│ ├── customer.csv # bảng khách hàng
+│   ├── customer_lifetime_value.csv       # dữ liệu gốc
 
-│ └── customer_segmented.csv # sau khi phân cụm (Phase 1)
+│   ├── customer_segmented.csv            # sau khi phân cụm (Phase 1)
+
+│   ├── df_success.csv                    # sau khi làm sạch (Phase 0)
+
+│   ├── docs.pdf
+
+│   ├── fulltime.csv
+
+│   └── rfm_first_6_months.csv            # feature RFM 6 tháng đầu (Phase 2/3)
 
 ├── models/
 
-│ ├── kmeans_model.pkl
+│   ├── churn_model.pkl
 
-│ ├── scaler.pkl
+│   ├── clustering_model.pkl
 
-│ ├── regressor_model.pkl
-
-│ └── churn_model.pkl
+│   └── regressor_model.pkl
 
 ├── notebooks/
 
-│ ├── Phase_0_Data_Cleaning.ipynb
+│   ├── Phase 0_Data Cleaning.ipynb
 
-│ ├── Phase_1_Clustering.ipynb
+│   ├── Phase_1_Clustering.ipynb
 
-│ ├── Phase_2_Money_Regressor.ipynb
+│   ├── Phase_2_Money_Regressor.ipynb
 
-│ └── Phase_3_Churn_Classification.ipynb
+│   └── Phase_3_Churn_Classification.ipynb
 
-└── README.md
+├── .gitignore
+
+├── README.md
+
+└── requirements.txt
 
 ## Chi tiết từng phase
 
